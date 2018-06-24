@@ -12,10 +12,11 @@ niw = {%niw%}
 tnn = {%tnn%}
 tnnn = {%tnnn%}
 tz = {%tz%}
+lattice = {%lattice%}
 
 rho = SCStiffness(fname, nk, niw, tnn, tnnn, tz)
 
-groupname = 'scstiffness'
+groupname = 'scstiffness_'+lattice
 if mpi.is_master_node():
     with HDFArchive(fname) as h5f:
         if not h5f.is_group(groupname):

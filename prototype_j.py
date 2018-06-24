@@ -12,10 +12,11 @@ niw = {%niw%}
 tnn = {%tnn%}
 tnnn = {%tnnn%}
 tz = {%tz%}
+lattice = {%lattice%}
 
 jjos = JosephsonExchange(fname, nk, niw, tnn, tnnn, tz)
 
-groupname = 'josephsonexchange'
+groupname = 'josephsonexchange_'+lattice
 if mpi.is_master_node():
     with HDFArchive(fname) as h5f:
         if not h5f.is_group(groupname):
