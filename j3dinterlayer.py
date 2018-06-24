@@ -10,7 +10,7 @@ from symmetry import symmetrize
 
     
 class JosephsonExchange:
-    def __init__(self, fname, nk, niw, tnn, tnnn, tz = -.15, rjs = [(0,0,0), (1,0,0), (0,1,0),(0,0,1),(1,1,0),(1,0,1),(1,1,1)], verbose = True, loops = [-1]):
+    def __init__(self, fname, nk, niw, tnn, tnnn, tz = -.15, rjs = [(0,0,0), (1,0,0), (0,0,1),(1,1,0),(1,0,1),(1,1,1),(2,0,0),(0,0,2)], verbose = True, loops = [-1]):
         self.verbose = verbose
         self.report('loading '+fname+'...')
         self.values = dict()
