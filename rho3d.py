@@ -91,14 +91,16 @@ class SCStiffness:
 
         for (i_k, kv), wk in zip(enumerate(glatk), glatwk):
             self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
-            depsargs = [kv[0]*twopi,kv[1]*twopi, kv[2]*twopi,tnn,tnnn,tz]
             if xx or xy or xz:
+                depsargs = [kv[0]*twopi,kv[1]*twopi,tnn,tnnn]
                 depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
                 dgdkx.zero()
             if xy:
+                depsargs = [kv[0]*twopi,kv[1]*twopi,tnn,tnnn]
                 depsdky = np.kron(p3, deps_by_dky(*depsargs))
                 dgdky.zero()
             if xz or zz:
+                depsargs = [kv[2]*twopi,tz]
                 depsdkz = np.kron(p3, deps_by_dkz(*depsargs))
                 dgdkz.zero()
             glatgki = glat.gk[i_k]['0']
