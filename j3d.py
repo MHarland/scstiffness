@@ -69,7 +69,7 @@ class JosephsonExchange:
         for i_h, h in enumerate(h_r):
             h_r[i_h] = {'0': np.kron(p3, u.dot(np.array(h['0'])).dot(u))}
         weights_r = [1] * len(translations)
-        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True)
+        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True, hk_on_the_fly = True)
 
         ri = (0,0,0)
         gtmp = BlockGf(name_block_generator = [[j, GfImFreq(beta = beta, n_points = niw, indices = [0])] for j in gimp.indices])

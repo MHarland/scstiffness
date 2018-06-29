@@ -69,7 +69,7 @@ class SCStiffness:
         for i_h, h in enumerate(h_r):
             h_r[i_h] = {'0': np.kron(p3, u.dot(np.array(h['0'])).dot(u))}
         weights_r = [1] * len(translations)
-        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True)
+        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True, hk_on_the_fly = True)
 
         rhoxx = GfImFreq(beta = beta, n_points = niw, indices = [0])
         rhoxx00 = rhoxx[0,0]
@@ -89,7 +89,7 @@ class SCStiffness:
         seimp0 = seimp['0']
 
         for (i_k, k), wk in zip(enumerate(glatk), glatwk):
-            #self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
+            self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
             depsargs = [k[0]*twopi,k[1]*twopi,tnn,tnnn]
             depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
             depsdky = np.kron(p3, deps_by_dky(*depsargs))

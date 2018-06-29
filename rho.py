@@ -10,8 +10,9 @@ from epsderivative import deps_by_dkx, deps_by_dky
 from symmetry import symmetrize
 
 class SCStiffness:
-    def __init__(self, fname, nk, niw, tnn, tnnn, verbose = True, xx = True, xy = True, loops = [-1]):
+    def __init__(self, fname, nk, niw, tnn, tnnn, verbose = True, xx = True, xy = False, loops = [-1]):
         self.verbose = verbose
+
         self.report('loading '+fname+'...')
         sto = Storage(fname)
         seimpin = sto.load('se_imp_iw', -1)
@@ -21,6 +22,7 @@ class SCStiffness:
         gimpin = sto.load('g_imp_iw', -1)
         gimp = BlockGf(name_block_generator = [(s, GfImFreq(beta = beta, n_points = niw, indices = b.indices)) for s, b in gimpin])
         gimptmp = gimp.copy()
+
         for loop in loops:
             seimpin = sto.load('se_imp_iw', loop)
             for s, b in seimpin:
@@ -66,7 +68,8 @@ class SCStiffness:
         for i_h, h in enumerate(h_r):
             h_r[i_h] = {'0': np.kron(p3, u.dot(np.array(h['0'])).dot(u))}
         weights_r = [1] * len(translations)
-        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True)
+
+        glat = LatticeGreensfunction(blocknames, blockindices, translations, h_r, nk, seimp, mu, weights_r, gk_on_the_fly = True, hk_on_the_fly = True)
 
         rhoxx = GfImFreq(beta = beta, n_points = niw, indices = [0])
         rhoxx00 = rhoxx[0,0]
