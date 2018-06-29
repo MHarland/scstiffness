@@ -82,63 +82,68 @@ class SCStiffness:
         dgdkx = GfImFreq(beta = beta, n_points = niw, indices = range(8))
         dgdky = GfImFreq(beta = beta, n_points = niw, indices = range(8))
         dgdkz = GfImFreq(beta = beta, n_points = niw, indices = range(8))
+        
         glatk = scatter_list(glat.k)
         nk_core = len(glatk)
         glatwk = scatter_list(glat.wk)
         twopi = np.pi*2
         seimp0 = seimp['0']
 
-        for (i_k, k), wk in zip(enumerate(glatk), glatwk):
+        for (i_k, kv), wk in zip(enumerate(glatk), glatwk):
             self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
-            depsargs = [k[0]*twopi,k[1]*twopi,tnn,tnnn]
-            depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
-            depsdky = np.kron(p3, deps_by_dky(*depsargs))
-            depsdkz = np.kron(p3, deps_by_dkz(twopi*k[2], tz))
-            dgdkx.zero()
-            dgdky.zero()
-            dgdkz.zero()
+            depsargs = [kv[0]*twopi,kv[1]*twopi, kv[2]*twopi,tnn,tnnn,tz]
+            if xx or xy or xz:
+                depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
+                dgdkx.zero()
+            if xy:
+                depsdky = np.kron(p3, deps_by_dky(*depsargs))
+                dgdky.zero()
+            if xz or zz:
+                depsdkz = np.kron(p3, deps_by_dkz(*depsargs))
+                dgdkz.zero()
             glatgki = glat.gk[i_k]['0']
+            
             for i, j, m, n in itt.product(*[range(8)]*4):
                 if i >= 4 and n < 4: continue # anomalous symmetry
                 if j >= 4 and m < 4: continue # no anomalous dispersion
                 if m >= 4 and j < 4: continue
-                dgdkx[i,n] += glatgki[i,j] * depsdkx[j,m] * glatgki[m,n]
-                dgdky[i,n] += glatgki[i,j] * depsdky[j,m] * glatgki[m,n]
-                dgdkz[i,n] += glatgki[i,j] * depsdkz[j,m] * glatgki[m,n]
-            for i, j, k, l in itt.product(*[range(4)]*4):
-                if j!=k and not((j,k) in [(1,5),(5,1),(2,6),(6,2)]): continue
-                if l!=i and not((l,i) in [(1,5),(5,1),(2,6),(6,2)]): continue
-                if xx:
-                    rhoxx00 -= .5*dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i]
-                    rhoxx00 -= .5*dgdkx[4+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,0+l]*seimp0[0+l,4+i]
-                    rhoxx00 += dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,4+l]*seimp0[0+l,4+i]
+                if not((i,n) in [(1,5), (1,1), (5,5), (1,6), (2,5), (1,2), (6,5), (2,1), (5,6), (2,6),
+                                 (2,2), (6,6)]): continue # numerical analysis, only these entries are needed below
+                if xx or xy or xz:
+                    dgdkx[i,n] += glatgki[i,j] * depsdkx[j,m] * glatgki[m,n]
                 if xy:
-                    rhoxy00 -= .5*dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdky[4+k,4+l]*seimp0[0+l,4+i]
-                    rhoxy00 -= .5*dgdkx[4+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,0+l]*seimp0[0+l,4+i]
-                    rhoxy00 += dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i]
+                    dgdky[i,n] += glatgki[i,j] * depsdky[j,m] * glatgki[m,n]
+                if xz or zz:
+                    dgdkz[i,n] += glatgki[i,j] * depsdkz[j,m] * glatgki[m,n]
+                    
+            for i, j, k, l in [(1,1,1,1),(1,2,2,1),(2,1,1,2),(2,2,2,2)]: # S has only two entries: XX, YY
+                if xx:
+                    rhoxx00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,4+l]*seimp0[0+l,4+i] -
+                                     dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i])
+                if xy:
+                    rhoxy00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i] -
+                                     dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdky[4+k,4+l]*seimp0[0+l,4+i])
                 if xz:
-                    rhoxz00 -= .5*dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i]
-                    rhoxz00 -= .5*dgdkx[4+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,0+l]*seimp0[0+l,4+i]
-                    rhoxz00 += dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i]
+                    rhoxz00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i] -
+                                     dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i])
                 if zz:
-                    rhozz00 -= .5*dgdkz[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i]
-                    rhozz00 -= .5*dgdkz[4+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,0+l]*seimp0[0+l,4+i]
-                    rhozz00 += dgdkz[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i]
+                    rhozz00 += wk * (dgdkz[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i] -
+                                     dgdkz[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i])
         if xx:
             rhoxx << mpi.all_reduce(mpi.world, rhoxx, lambda x, y: x + y)
-            rhoxx << rhoxx / (nk**3)
+            rhoxx << rhoxx
             self.rhoxx = rhoxx.total_density()
         if xy:
             rhoxy << mpi.all_reduce(mpi.world, rhoxy, lambda x, y: x + y)
-            rhoxy << rhoxy / (nk**3)
+            rhoxy << rhoxy
             self.rhoxy = rhoxy.total_density()
         if xz:
             rhoxz << mpi.all_reduce(mpi.world, rhoxz, lambda x, y: x + y)
-            rhoxz << rhoxz / (nk**3)
+            rhoxz << rhoxz
             self.rhoxz = rhoxz.total_density()
         if zz:
             rhozz << mpi.all_reduce(mpi.world, rhozz, lambda x, y: x + y)
-            rhozz << rhozz / (nk**3)
+            rhozz << rhozz
             self.rhozz = rhozz.total_density()
 
     def report(self, text):
