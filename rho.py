@@ -10,7 +10,7 @@ from epsderivative import deps_by_dkx, deps_by_dky
 from symmetry import symmetrize
 
 class SCStiffness:
-    def __init__(self, fname, nk, niw, tnn, tnnn, verbose = True, xx = True, xy = False, loops = [-1]):
+    def __init__(self, fname, nk, niw, tnn, tnnn, verbose = True, xx = True, xy = False, loops = [-1], calc_gloc = False):
         self.verbose = verbose
 
         self.report('loading '+fname+'...')
@@ -77,20 +77,32 @@ class SCStiffness:
         rhoxy00 = rhoxy[0,0]
         dgdkx = GfImFreq(beta = beta, n_points = niw, indices = range(8))
         dgdky = GfImFreq(beta = beta, n_points = niw, indices = range(8))
+        
         glatk = scatter_list(glat.k)
         nk_core = len(glatk)
         glatwk = scatter_list(glat.wk)
+        glatik = scatter_list(glat.ik)
         twopi = np.pi*2
         seimp0 = seimp['0']
 
-        for (i_k, kv), wk in zip(enumerate(glatk), glatwk):
+        if calc_gloc:
+            gloctest = seimp.copy()
+            gloctest.zero()
+        
+        for i_k, kv, wk in zip(glatik, glatk, glatwk):
             self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
+            
             depsargs = [kv[0]*twopi,kv[1]*twopi,tnn,tnnn]
             depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
-            #depsdky = np.kron(p3, deps_by_dky(*depsargs))
             dgdkx.zero()
-            #dgdky.zero()
+            if xy:
+                depsdky = np.kron(p3, deps_by_dky(*depsargs))
+                dgdky.zero()
+            
             glatgki = glat.gk[i_k]['0']
+            if calc_gloc:
+                gloctest['0'] += glatgki * wk
+
             for i, j, m, n in itt.product(*[range(8)]*4):
                 if i >= 4 and n < 4: continue # anomalous symmetry
                 if j >= 4 and m < 4: continue # no anomalous dispersion
@@ -98,14 +110,15 @@ class SCStiffness:
                 if not((i,n) in [(1,5), (1,1), (5,5), (1,6), (2,5), (1,2), (6,5), (2,1), (5,6), (2,6),
                                  (2,2), (6,6)]): continue # numerical analysis, only these entries are needed below
                 dgdkx[i,n] += glatgki[i,j] * depsdkx[j,m] * glatgki[m,n]
-                #dgdky[i,n] += glatgki[i,j] * depsdky[j,m] * glatgki[m,n]
-                
+                if xy:
+                    dgdky[i,n] += glatgki[i,j] * depsdky[j,m] * glatgki[m,n]
+            
             for i, j, k, l in [(1,1,1,1),(1,2,2,1),(2,1,1,2),(2,2,2,2)]: # S has only two entries: XX, YY
                 if xx:
                     rhoxx00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,4+l]*seimp0[0+l,4+i] -
                                      dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i])
                 if xy:
-                    rhoxx00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i] -
+                    rhoxy00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i] -
                                      dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdky[4+k,4+l]*seimp0[0+l,4+i])
         if xx:
             rhoxx << mpi.all_reduce(mpi.world, rhoxx, lambda x, y: x + y)
@@ -115,6 +128,11 @@ class SCStiffness:
             rhoxy << mpi.all_reduce(mpi.world, rhoxy, lambda x, y: x + y)
             rhoxy << rhoxy
             self.rhoxy = rhoxy.total_density()
+            
+        if calc_gloc:
+            gloctest << mpi.all_reduce(mpi.world, gloctest, lambda x, y: x + y)
+            self.gloc_err =  np.sum(np.abs(gloctest['0'].data[niw,:,:]-gimp['0'].data[niw,:,:]), axis = (0,1))
+            self.gloc << gloctest
 
     def report(self, text):
         if mpi.is_master_node() and self.verbose:

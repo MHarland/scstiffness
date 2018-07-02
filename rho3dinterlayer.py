@@ -112,11 +112,13 @@ class SCStiffness:
         glatk = scatter_list(glat.k)
         nk_core = len(glatk)
         glatwk = scatter_list(glat.wk)
+        glatik = scatter_list(glat.ik)
         twopi = np.pi*2
         seimp0 = seimp['0']
 
-        for (i_k, kv), wk in zip(enumerate(glatk), glatwk):
+        for i_k, kv, wk in zip(glatik, glatk, glatwk):
             self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
+            
             depsargs = [kv[0]*twopi,kv[1]*twopi, kv[2]*twopi,tnn,tnnn,tz]
             if xx or xy or xz:
                 depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
@@ -127,6 +129,7 @@ class SCStiffness:
             if xz or zz:
                 depsdkz = np.kron(p3, deps_by_dkz(*depsargs))
                 dgdkz.zero()
+            
             glatgki = glat.gk[i_k]['0']
             
             for i, j, m, n in itt.product(*[range(8)]*4):
