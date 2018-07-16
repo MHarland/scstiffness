@@ -147,16 +147,18 @@ class SCStiffness:
                     
             for i, j, k, l in [(1,1,1,1),(1,2,2,1),(2,1,1,2),(2,2,2,2)]: # S has only two entries: XX, YY
                 if xx:
-                    rhoxx00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,4+l]*seimp0[0+l,4+i] -
+                    rhoxx00 += wk*2*(dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkx[0+k,4+l]*seimp0[0+l,4+i]-
                                      dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i])
                 if xy:
-                    rhoxy00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i] -
-                                     dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdky[4+k,4+l]*seimp0[0+l,4+i])
+                    rhoxy00 += wk*(2*dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdky[0+k,4+l]*seimp0[0+l,4+i]-
+                                   dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdky[4+k,4+l]*seimp0[0+l,4+i]-
+                                   dgdky[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i])
                 if xz:
-                    rhoxz00 += wk * (dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i] -
-                                     dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i])
+                    rhoxz00 += wk*(2*dgdkx[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i]-
+                                   dgdkx[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i]-
+                                   dgdkz[0+i,0+j]*seimp0[0+j,4+k]*dgdkx[4+k,4+l]*seimp0[0+l,4+i])
                 if zz:
-                    rhozz00 += wk * (dgdkz[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i] -
+                    rhozz00 += wk*2*(dgdkz[0+i,4+j]*seimp0[0+j,4+k]*dgdkz[0+k,4+l]*seimp0[0+l,4+i]-
                                      dgdkz[0+i,0+j]*seimp0[0+j,4+k]*dgdkz[4+k,4+l]*seimp0[0+l,4+i])
         if xx:
             rhoxx << mpi.all_reduce(mpi.world, rhoxx, lambda x, y: x + y)
