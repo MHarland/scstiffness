@@ -84,8 +84,8 @@ class JosephsonExchange:
             for i, j, k, l in itt.product(*[range(4)]*4):
                 if j!=k and not((j,k) in [(1,5),(5,1),(2,6),(6,2)]): continue
                 if l!=i and not((l,i) in [(1,5),(5,1),(2,6),(6,2)]): continue
-                gtmp00 += glatij[0+i,0+j]*seimp[s][0+j,4+k]*glatji[4+k,4+l]*seimp[s][0+l,4+i]
-                gtmp00 -= glatij[0+i,4+j]*seimp[s][0+j,4+k]*glatji[0+k,4+l]*seimp[s][0+l,4+i]
+                gtmp00 -= glatij[0+i,0+j]*seimp[s][0+j,4+k]*glatji[4+k,4+l]*seimp[s][0+l,4+i]
+                gtmp00 += glatij[0+i,4+j]*seimp[s][0+j,4+k]*glatji[0+k,4+l]*seimp[s][0+l,4+i]
             self.values[rj] = gtmp.total_density().real
 
     def report(self, text):
