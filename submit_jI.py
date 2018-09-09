@@ -22,7 +22,7 @@ pars_common = {'prototype_files': ['prototype_stiffness.py','prototype_hlrn.sh']
 
 pars = []
 for fname in sys.argv[1:]:
-    pars.append(pars_common)
+    pars.append(pars_common.copy())
     pars[-1]['fname'] = fname
     pars[-1]['name'] = pars[-1]['fname'][:-9]+'tz'+str(pars[-1]['tz'])+'_'+pars[-1]['lattice']+'_nk'+str(pars[-1]['nk'])+'_niw'+str(pars[-1]['niw'])+'_nambu'
 
