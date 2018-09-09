@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, sys, os, itertools, numpy as np
+import subprocess, os, itertools, numpy as np
 
 
 pars_common = {'prototype_files': ['prototype_stiffness.py','prototype_hlrn.sh'],
@@ -7,29 +7,30 @@ pars_common = {'prototype_files': ['prototype_stiffness.py','prototype_hlrn.sh']
                'target_files': [],
                # target_file scope:
                'cwd': os.getcwd(),
-               'accountname': 'hhp00040',
+               'accountname': 'hhp00042',
                'n_nodes': 4,
                'walltime': '4:00:00',
-               #j: j3dinterlayer, j3d, stiffness: rho3dinterlayer, rho3d
-               'lattice': 'rho3d',
+               #j: JosephsonExchange2D, JosephsonExchange3D, JosephsonExchange3DAndersen
+               #I: SCStiffness2D, SCStiffness3D, SCStiffness3DAndersen
+               'lattice': 'SCStiffness3D',
                'niw': 20,
                'nk': 32,
                'tnn': -1,
                'tnnn': .3,
-               #'fname':'',
-               'tz': tz}
+               'tz': -.15}
 
 pars = []
+mus = [2.7]
 for mu in mus:
     pars.append(pars_common)
-    pars[-1]['fname'] = 'b52tnnn'+str(par['tnnn'])+'mu'+str(mu)+'_nambu.h5'
+    pars[-1]['name'] = 'b52tnnn'+str(pars_common['tnnn'])+'u6mu'+str(mu)+'_nambu'
 
 for par in pars:
     par['n_tasks'] = par['n_nodes'] * 24
-    par['name'] = par['model'][:4]+'b'+str(par['beta'])+'sig'+str(par['sigma'])
     par['pyname'] = 'stiff_'+par['name']+'.py'
     par['jobname'] = par['name']
     par['target_files'] = ['stiff_'+par['name']+'.py', 'stiff_'+par['name']+'.sh']
+    par['fname'] = par['name']+'.h5'
 
 for par in pars:
     for proto_fname, target_fname, commands in zip(par['prototype_files'], par['target_files'], par['commands']):
@@ -47,6 +48,6 @@ for par in pars:
         for command in commands:
             if 'sub' in command:
                 jobid_str = subprocess.check_output(command+' '+target_fname, shell = True)
-                print par['jobname']+' submitted as '+jobid_str[9:16]
+                print par['jobname']+' submitted as '+jobid_str[16]
             else:
                 subprocess.call(command+' '+target_fname, shell = True)
