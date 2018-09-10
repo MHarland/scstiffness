@@ -12,4 +12,4 @@
 
 source /home/h/hhpmharl/.bashrc
 triqsenv2
-PYTHONPATH="{%cwd%}:$PYTHONPATH" aprun -n {%n_tasks%} {%pyname%}
+PYTHONPATH="{%cwd%}:$PYTHONPATH" aprun -n {%n_tasks%} pytriqs {%pyname%}
