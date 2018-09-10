@@ -134,9 +134,11 @@ class JosephsonExchangeCommon:
                 h5f[groupname][str(n)].create_group('parameters')
                 for pn, p in self.parameters.items():
                     h5f[groupname][str(n)]['parameters'][pn] = p
-                h5f[groupname][str(n)].create_group('values')
-                for vn, v in self.values.items():
-                    h5f[groupname][str(n)]['values'][vn] = v
+                h5f[groupname][str(n)].create_group('result_keys')
+                h5f[groupname][str(n)].create_group('result_values')
+                for v_, (vn, v) in enumerate(self.values.items()):
+                    h5f[groupname][str(n)]['result_keys'][str(v_)] = vn
+                    h5f[groupname][str(n)]['result_values'][str(v_)] = v
                 h5f[groupname]['n'] += 1
             self.report(cn+' written to '+h5name+'/'+groupname+'/'+str(n))
 
