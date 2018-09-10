@@ -134,9 +134,9 @@ class JosephsonExchangeCommon:
                 h5f[groupname][str(n)].create_group('parameters')
                 for pn, p in self.parameters.items():
                     h5f[groupname][str(n)]['parameters'][pn] = p
-                rs = [r for r in self.values.keys()]
-                h5f[groupname][str(n)]['translations'] = np.array(rs)
-                h5f[groupname][str(n)]['js'] = np.array([self.values[r] for r in rs])
+                h5f[groupname][str(n)].create_group('values')
+                for vn, v in self.values.items():
+                    h5f[groupname][str(n)]['values'][vn] = v
                 h5f[groupname]['n'] += 1
             self.report(cn+' written to '+h5name+'/'+groupname+'/'+str(n))
 
