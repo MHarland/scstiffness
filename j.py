@@ -111,7 +111,7 @@ class JosephsonExchangeCommon:
                 for i, j in itt.product(*[range(4)]*2): # could be parallelized
                     if j!=i and not((j,k) in [(1,5),(5,1),(2,6),(6,2)]): continue
                     gtmp00 += glatij[0+i,4+j]*se[bn][0+j,4+i]
-                gtmp00 << -2*gtmp00
+                gtmp00 << -1*gtmp00
             self.values[rj] = gtmp.total_density().real
 
     def save_to_h5(self, h5name = None, groupname = 'josephsonexchange'):
