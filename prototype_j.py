@@ -2,7 +2,7 @@ import numpy as np
 from scstiffness.j import {%lattice%} as JosephsonExchange
 
 
-fname = {%fname%}
+fname = '{%fname%}'
 nk = {%nk%}
 niw = {%niw%}
 tnn = {%tnn%}

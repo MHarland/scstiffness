@@ -1,7 +1,7 @@
 from scstiffness.I import {%lattice%} as SCStiffness
 
 
-fname = {%fname%}
+fname = '{%fname%}'
 nk = {%nk%}
 niw = {%niw%}
 tnn = {%tnn%}
