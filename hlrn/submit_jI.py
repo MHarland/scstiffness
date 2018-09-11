@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, os, itertools, numpy as np
+import sys, subprocess, os, itertools, numpy as np
 
 
 # prototype_j.py, prototype_stiffness.py
