@@ -5,7 +5,6 @@ from pytriqs.gf.local import BlockGf, GfImFreq
 from pytriqs.utility import mpi
 
 from j import JosephsonExchangeCommon
-from epsderivative import deps_by_dkx, deps_by_dky, deps_by_dkz
 from hoppings import Hopping2D, Hopping3D, Hopping3DAndersen
 from mpiLists import scatter_list
 
@@ -21,15 +20,14 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
 
         se_cdmft, mu = self.load_cdmft(h5name_cdmft, niw, loops)
         se_cdmft = self.transf_sp_basis(se_cdmft)
-        hop = self.get_hopping(mu, tnn, tnnn, tz)
-        se, glat = self.calc_correlation_functions(se_cdmft, hop, nk, gk_on_the_fly, hk_on_the_fly)
+        self.hop = self.get_hopping(mu, tnn, tnnn, tz)
+        se, glat = self.calc_correlation_functions(se_cdmft, self.hop, nk, gk_on_the_fly,
+                                                   hk_on_the_fly)
         self.calc_values(se, glat, xx, xy, xz, zz)
 
     def calc_values(self, se, glat, xx, xy, xz, zz):
         niw = self.parameters['niw']
-        tnn, tnnn = self.parameters['tnn'], self.parameters['tnnn']
-        if xz or zz:
-            tz = self.parameters['tz']
+        tnn, tnnn, tz = self.parameters['tnn'], self.parameters['tnnn'], self.parameters['tz']
         beta = se.beta
 
         # init accumulators
@@ -54,19 +52,16 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
         se0 = se['0']
 
         for i_k, kv, wk in zip(glatik, glatk, glatwk):
-            #self.report('i_k = '+str(i_k+1)+'/'+str(nk_core))
-            
+            self.report_detail('i_k = '+str(i_k+1)+'/'+str(nk_core))
+            depsargs = [kv*twopi,tnn,tnnn,tz]
             if xx or xy or xz:
-                depsargs = [kv[0]*twopi,kv[1]*twopi,tnn,tnnn]
-                depsdkx = np.kron(p3, deps_by_dkx(*depsargs))
+                depsdkx = np.kron(p3, self.hop.deps_by_dkx(*depsargs))
                 dgdkx.zero()
             if xy:
-                depsargs = [kv[0]*twopi,kv[1]*twopi,tnn,tnnn]
-                depsdky = np.kron(p3, deps_by_dky(*depsargs))
+                depsdky = np.kron(p3, self.hop.deps_by_dky(*depsargs))
                 dgdky.zero()
             if xz or zz:
-                depsargs = [kv[2]*twopi,tz]
-                depsdkz = np.kron(p3, deps_by_dkz(*depsargs))
+                depsdkz = np.kron(p3, self.hop.deps_by_dkz(*depsargs))
                 dgdkz.zero()
             
             glatgki = glat.gk[i_k]['0']
@@ -123,7 +118,7 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
 
 class SCStiffness2D(SCStiffnessCommon):
 
-    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz, verbose = True, xx = True, xy = False, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
+    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = 0, verbose = True, xx = True, xy = False, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
 
         tz = 0
         self.h5name_cdmft = h5name_cdmft
@@ -133,8 +128,9 @@ class SCStiffness2D(SCStiffnessCommon):
 
         se_cdmft, mu = self.load_cdmft(h5name_cdmft, niw, loops)
         se_cdmft = self.transf_sp_basis(se_cdmft)
-        hop = self.get_hopping(mu, tnn, tnnn)
-        se, glat = self.calc_correlation_functions(se_cdmft, hop, nk, gk_on_the_fly, hk_on_the_fly)
+        self.hop = self.get_hopping(mu, tnn, tnnn)
+        se, glat = self.calc_correlation_functions(se_cdmft, self.hop, nk, gk_on_the_fly,
+                                                   hk_on_the_fly)
         self.calc_values(se, glat, xx, xy, False, False)
 
     def get_hopping(self, mu, tnn, tnnn, *args):
