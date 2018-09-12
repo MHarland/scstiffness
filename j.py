@@ -22,7 +22,7 @@ class JosephsonExchangeCommon:
     def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = -.15,
                  rjs = [(0,0,0),(1,0,0),(0,0,1),(1,1,0),(1,0,1),(1,1,1),(2,0,0),(0,0,2),(3,0,0),
                         (0,0,3)],
-                 verbose = True, loops = [-1], gk_on_the_fly = False, hk_on_the_fly = False):
+                 verbose = True, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
 
         self.h5name_cdmft = h5name_cdmft
         self.parameters = {'nk':nk, 'niw': niw, 'tnn': tnn, 'tnnn': tnnn, 'tz': tz}
@@ -147,7 +147,7 @@ class JosephsonExchange2D(JosephsonExchangeCommon):
 
     def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz,
                  rjs = [(0,0), (1,0), (1,1), (2,0), (2,1), (2,2), (3,0)],
-                 verbose = True, loops = [-1], gk_on_the_fly = False, hk_on_the_fly = False):
+                 verbose = True, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
 
         tz = 0
         self.h5name_cdmft = h5name_cdmft
