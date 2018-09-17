@@ -72,19 +72,13 @@ class JosephsonExchangeCommon:
     
     def calc_correlation_functions(self, se_cdmft, hopping, nk, gk_on_the_fly, hk_on_the_fly):
         self.report('calculating lattice correlation functions...')
-        se = se_cdmft.copy()
-        se.zero()
+        se_cdmft.copy()
         mu = 0
         blocknames = [k for k in se_cdmft.indices]
         blockindices = [se_cdmft[bn].indices for bn in blocknames]
         weights_r = [1] * hopping.n_r
         glat = LatticeGreensfunction(blocknames, blockindices, hopping.r, hopping.h_r, nk, se_cdmft, mu, weights_r, gk_on_the_fly = gk_on_the_fly, hk_on_the_fly = hk_on_the_fly)
-        g0lat = LatticeGreensfunction(blocknames, blockindices, hopping.r, hopping.h_r, nk, se, mu, weights_r, gk_on_the_fly = gk_on_the_fly, hk_on_the_fly = hk_on_the_fly)
-        g0latloc = LocalLatticeGreensfunction(g0lat)
-        glatloc = LocalLatticeGreensfunction(glat)
-        for bn, b in se:
-            b << inverse(g0latloc[bn]) - inverse(glatloc[bn])
-        return se, glat
+        return se_cdmft, glat
 
     def calc_values(self, se, glat, rjs):
         self.report('calculating J...')

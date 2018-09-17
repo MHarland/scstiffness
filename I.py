@@ -10,8 +10,10 @@ from mpiLists import scatter_list
 
 
 class SCStiffnessCommon(JosephsonExchangeCommon):
-
-    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = -.15, verbose = True, xx = True, xy = False, xz = False, zz = True, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
+    """
+    The theory is gauge invariant, thus J_loc = 0
+    """
+    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = -.15, verbose = True, xx = True, xy = False, xz = False, zz = True, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True, j_loc = False):
 
         self.h5name_cdmft = h5name_cdmft
         self.parameters = {'nk':nk, 'niw': niw, 'tnn': tnn, 'tnnn': tnnn, 'tz': tz}
@@ -23,14 +25,16 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
         self.hop = self.get_hopping(mu, tnn, tnnn, tz)
         se, glat = self.calc_correlation_functions(se_cdmft, self.hop, nk, gk_on_the_fly,
                                                    hk_on_the_fly)
-        self.calc_values(se, glat, xx, xy, xz, zz)
+        self.calc_values(se, glat, xx, xy, xz, zz, j_loc)
 
-    def calc_values(self, se, glat, xx, xy, xz, zz):
+    def calc_values(self, se, glat, xx, xy, xz, zz, j_loc):
         niw = self.parameters['niw']
         tnn, tnnn, tz = self.parameters['tnn'], self.parameters['tnnn'], self.parameters['tz']
         beta = se.beta
 
         # init accumulators
+        jloc = GfImFreq(beta = beta, n_points = niw, indices = [0])
+        jloc00 = jloc[0,0]
         rhoxx = GfImFreq(beta = beta, n_points = niw, indices = [0])
         rhoxx00 = rhoxx[0,0]
         rhoxy = GfImFreq(beta = beta, n_points = niw, indices = [0])
@@ -96,6 +100,12 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
                 if zz:
                     rhozz00 += wk*2*(dgdkz[0+i,4+j]*se0[0+j,4+k]*dgdkz[0+k,4+l]*se0[0+l,4+i]-
                                      dgdkz[0+i,0+j]*se0[0+j,4+k]*dgdkz[4+k,4+l]*se0[0+l,4+i])
+                if j_loc:
+                    jloc00 += wk*(glatgki[0+i,0+j]*se0[0+j,4+k]*glatgki[4+k,4+l]*se0[0+l,4+i]-
+                                  glatgki[0+i,4+j]*se0[0+j,4+k]*glatgki[0+k,4+l]*se0[0+l,4+i])
+            for i, j in [(1,1),(1,2),(2,1),(2,2)]:
+                if j_loc:
+                    jloc00 += (-1)*wk*(glatgki[0+i,4+j]*se0[0+j,4+i])
         if xx:
             rhoxx << mpi.all_reduce(mpi.world, rhoxx, lambda x, y: x + y)
             self.values['xx'] = rhoxx.total_density().real
@@ -108,6 +118,9 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
         if zz:
             rhozz << mpi.all_reduce(mpi.world, rhozz, lambda x, y: x + y)
             self.values['zz'] = rhozz.total_density().real
+        if j_loc:
+            jloc << mpi.all_reduce(mpi.world, jloc, lambda x, y: x + y)
+            self.values['j_loc'] = jloc.total_density().real
 
     def save_to_h5(self, h5name = None, groupname = 'scstiffness'):
         if h5name is None:
@@ -118,7 +131,7 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
 
 class SCStiffness2D(SCStiffnessCommon):
 
-    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = 0, verbose = True, xx = True, xy = False, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True):
+    def __init__(self, h5name_cdmft, nk, niw, tnn, tnnn, tz = 0, verbose = True, xx = True, xy = False, loops = [-1], gk_on_the_fly = True, hk_on_the_fly = True, j_loc = False):
 
         tz = 0
         self.h5name_cdmft = h5name_cdmft
@@ -131,7 +144,7 @@ class SCStiffness2D(SCStiffnessCommon):
         self.hop = self.get_hopping(mu, tnn, tnnn)
         se, glat = self.calc_correlation_functions(se_cdmft, self.hop, nk, gk_on_the_fly,
                                                    hk_on_the_fly)
-        self.calc_values(se, glat, xx, xy, False, False)
+        self.calc_values(se, glat, xx, xy, False, False, j_loc)
 
     def get_hopping(self, mu, tnn, tnnn, *args):
         return Hopping2D(mu, tnn, tnnn)
