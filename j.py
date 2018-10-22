@@ -28,6 +28,8 @@ class JosephsonExchangeCommon:
         self.parameters = {'nk':nk, 'niw': niw, 'tnn': tnn, 'tnnn': tnnn, 'tz': tz}
         self.verbose = verbose
         self.values = dict()
+        self.fsfs = dict()
+        self.gsgs = dict()
         
         se_cdmft, mu = self.load_cdmft(h5name_cdmft, niw, loops)
         se_cdmft = self.transf_sp_basis(se_cdmft)
@@ -86,12 +88,19 @@ class JosephsonExchangeCommon:
         niw = int(.5*len(se.mesh))
         gtmp = BlockGf(name_block_generator = [[j, GfImFreq(beta = se.beta, n_points = niw,
                                                             indices = [0])] for j in se.indices])
+        gsgs = BlockGf(name_block_generator = [[j, GfImFreq(beta = se.beta, n_points = niw,
+                                                            indices = [0])] for j in se.indices])
+        fsfs = BlockGf(name_block_generator = [[j, GfImFreq(beta = se.beta, n_points = niw,
+                                                            indices = [0])] for j in se.indices])
         j_r = np.zeros([len(rjs),3])
         bn = '0'
         for i_rj, rj in enumerate(rjs):
             self.report_detail('...'+str(rj)+'...')
-            gtmp.zero()
+            for g in [gtmp, gsgs, fsfs]:
+                g.zero()
             gtmp00 = gtmp[bn][0, 0]
+            gsgs00 = gsgs[bn][0, 0]
+            fsfs00 = fsfs[bn][0, 0]
             self.report_detail('calculating g_lat_ij...')
             glatij = glat[ri,rj][bn]
             glatji = glatij
@@ -101,20 +110,26 @@ class JosephsonExchangeCommon:
                 if l!=i and not((l,i) in [(1,5),(5,1),(2,6),(6,2)]): continue
                 gtmp00 += glatij[0+i,4+j]*se[bn][0+j,4+k]*glatji[0+k,4+l]*se[bn][0+l,4+i]
                 gtmp00 -= glatij[0+i,0+j]*se[bn][0+j,4+k]*glatji[4+k,4+l]*se[bn][0+l,4+i]
+                fsfs00 += glatij[0+i,4+j]*se[bn][0+j,4+k]*glatji[0+k,4+l]*se[bn][0+l,4+i]
+                gsgs00 -= glatij[0+i,0+j]*se[bn][0+j,4+k]*glatji[4+k,4+l]*se[bn][0+l,4+i]
             if np.sum(np.array(ri)-np.array(rj)) == 0:
                 for i, j in itt.product(*[range(4)]*2): # could be parallelized
                     if j!=i and not((j,k) in [(1,5),(5,1),(2,6),(6,2)]): continue
                     gtmp00 += glatij[0+i,4+j]*se[bn][0+j,4+i]
                 gtmp00 << -1*gtmp00
             self.values[rj] = gtmp.total_density().real
+            self.fsfs[rj] = fsfs.total_density().real
+            self.gsgs[rj] = gsgs.total_density().real
 
-    def save_to_h5(self, h5name = None, groupname = 'josephsonexchange'):
+    def save_to_h5(self, h5name = None, groupname = 'josephsonexchange', dict_to_save = None):
         if h5name is None:
-            self._save(self.h5name_cdmft, groupname)
+            self._save(self.h5name_cdmft, groupname, dict_to_save)
         else:
-            self._save(h5name, groupname)
+            self._save(h5name, groupname, dict_to_save)
 
-    def _save(self, h5name, groupname):
+    def _save(self, h5name, groupname, dict_to_save = None):
+        if dict_to_save is None:
+            dict_to_save = self.values
         if mpi.is_master_node():
             with HDFArchive(h5name) as h5f:
                 if not h5f.is_group(groupname):
@@ -130,7 +145,7 @@ class JosephsonExchangeCommon:
                     h5f[groupname][str(n)]['parameters'][pn] = p
                 h5f[groupname][str(n)].create_group('result_keys')
                 h5f[groupname][str(n)].create_group('result_values')
-                for v_, (vn, v) in enumerate(self.values.items()):
+                for v_, (vn, v) in enumerate(dict_to_save.items()):
                     h5f[groupname][str(n)]['result_keys'][str(v_)] = vn
                     h5f[groupname][str(n)]['result_values'][str(v_)] = v
                 h5f[groupname]['n'] += 1
@@ -148,6 +163,8 @@ class JosephsonExchange2D(JosephsonExchangeCommon):
         self.parameters = {'nk':nk, 'niw': niw, 'tnn': tnn, 'tnnn': tnnn, 'tz': tz}
         self.verbose = verbose
         self.values = dict()
+        self.fsfs = dict()
+        self.gsgs = dict()
 
         se_cdmft, mu = self.load_cdmft(h5name_cdmft, niw, loops)
         se_cdmft = self.transf_sp_basis(se_cdmft)
