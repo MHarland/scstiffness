@@ -25,7 +25,7 @@ class LoadedResult:
                                 break
                     if params_found:
                         self.class_name = run['class_name'].value
-                        if isinstance(run['result_keys'], h5py.Group):
+                        if 'Exchange' in self.class_name:
                             for r_, r_group in run['result_keys'].items():
                                 # this is ugly because r was saved as a tuple rather than an array
                                 r = []
