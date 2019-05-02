@@ -87,19 +87,19 @@ class SCStiffnessCommon(JosephsonExchangeCommon):
             # S has only two entries: XX, YY
             for i, j, k, l in [(1,1,1,1),(1,2,2,1),(2,1,1,2),(2,2,2,2)]:
                 if xx:
-                    rhoxx00 += wk*2*(dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdkx[0+k,4+l]*se0[0+l,4+i]-
-                                     dgdkx[0+i,0+j]*se0[0+j,4+k]*dgdkx[4+k,4+l]*se0[0+l,4+i])
+                    rhoxx00 += wk*(dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdkx[0+k,4+l]*se0[0+l,4+i]-
+                                   dgdkx[0+i,0+j]*se0[0+j,4+k]*dgdkx[4+k,4+l]*se0[0+l,4+i])
                 if xy:
-                    rhoxy00 += wk*(2*dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdky[0+k,4+l]*se0[0+l,4+i]-
+                    rhoxy00 += wk*(dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdky[0+k,4+l]*se0[0+l,4+i]-
                                    dgdkx[0+i,0+j]*se0[0+j,4+k]*dgdky[4+k,4+l]*se0[0+l,4+i]-
                                    dgdky[0+i,0+j]*se0[0+j,4+k]*dgdkx[4+k,4+l]*se0[0+l,4+i])
                 if xz:
-                    rhoxz00 += wk*(2*dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdkz[0+k,4+l]*se0[0+l,4+i]-
+                    rhoxz00 += wk*(dgdkx[0+i,4+j]*se0[0+j,4+k]*dgdkz[0+k,4+l]*se0[0+l,4+i]-
                                    dgdkx[0+i,0+j]*se0[0+j,4+k]*dgdkz[4+k,4+l]*se0[0+l,4+i]-
                                    dgdkz[0+i,0+j]*se0[0+j,4+k]*dgdkx[4+k,4+l]*se0[0+l,4+i])
                 if zz:
-                    rhozz00 += wk*2*(dgdkz[0+i,4+j]*se0[0+j,4+k]*dgdkz[0+k,4+l]*se0[0+l,4+i]-
-                                     dgdkz[0+i,0+j]*se0[0+j,4+k]*dgdkz[4+k,4+l]*se0[0+l,4+i])
+                    rhozz00 += wk*(dgdkz[0+i,4+j]*se0[0+j,4+k]*dgdkz[0+k,4+l]*se0[0+l,4+i]-
+                                   dgdkz[0+i,0+j]*se0[0+j,4+k]*dgdkz[4+k,4+l]*se0[0+l,4+i])
                 if j_loc:
                     jloc00 += wk*(glatgki[0+i,0+j]*se0[0+j,4+k]*glatgki[4+k,4+l]*se0[0+l,4+i]-
                                   glatgki[0+i,4+j]*se0[0+j,4+k]*glatgki[0+k,4+l]*se0[0+l,4+i])
