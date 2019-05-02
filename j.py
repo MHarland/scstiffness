@@ -4,8 +4,8 @@ from pytriqs.archive import HDFArchive
 from pytriqs.gf.local import BlockGf, GfImFreq, GfImTime, inverse
 from pytriqs.utility import mpi
 
-from bethe.h5interface import Storage
-from bethe.setups.cdmftsquarelattice import NambuMomentumPlaquetteSetup as Setup
+from cdmft.h5interface import Storage
+from cdmft.setups.cdmftsquarelattice import NambuMomentumPlaquetteSetup as Setup
 
 from periodization.dmft import LatticeGreensfunction
 from periodization.generic import LocalLatticeGreensfunction
